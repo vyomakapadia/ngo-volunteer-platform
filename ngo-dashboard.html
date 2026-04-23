@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ImpactSync – NGO Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .page-header { background:linear-gradient(135deg,#1a1a2e,#16213e); color:white; padding:1.5rem 2rem; }
+    .page-header h1 { font-size:1.4rem; margin-bottom:0.2rem; }
+    .page-header p  { font-size:0.85rem; opacity:0.65; }
+    .task-list-wrap { max-height:520px; overflow-y:auto; padding-right:4px; }
+    .task-list-wrap::-webkit-scrollbar { width:5px; }
+    .task-list-wrap::-webkit-scrollbar-thumb { background:#ddd; border-radius:4px; }
+    .tag { display:inline-block; background:#f0f4f8; color:#555; border-radius:6px; font-size:0.72rem; padding:0.15rem 0.5rem; margin:0.1rem; }
+    .progress-bar { background:#f0f4f8; border-radius:4px; height:6px; margin-top:0.4rem; }
+    .progress-bar .fill { background:#4ecca3; height:100%; border-radius:4px; transition:width 0.4s; }
+    /* ── URGENCY UI ── */
+    .progress-bar .fill.critical-fill { background:#e74c3c; }
+    .task-card {
+      background:white; border-radius:12px; padding:1.1rem 1.2rem;
+      border-left:4px solid #4ecca3;
+      box-shadow:0 2px 8px rgba(0,0,0,0.06); margin-bottom:0.8rem;
+    }
+    .task-card.critical {
+      border-left-color: #e74c3c;
+      box-shadow: 0 0 0 2px rgba(231,76,60,0.16), 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .critical-label {
+      display:inline-flex; align-items:center; gap:0.3rem;
+      background:#fff0ee; color:#c0392b; border:1px solid #f5c6c6;
+      border-radius:20px; font-size:0.72rem; font-weight:700;
+      padding:0.18rem 0.65rem; margin-left:0.4rem;
+    }
+    .task-actions { display:flex; gap:0.5rem; margin-top:0.8rem; flex-wrap:wrap; }
+    .empty { text-align:center; color:#888; padding:2rem 1rem; font-size:0.9rem; }
+    .empty-icon { font-size:2.5rem; margin-bottom:0.5rem; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <span class="logo">Impact<span>Sync</span></span>
+  <div class="nav-links">
+    <a href="chat.html">🤖 AI Chat</a>
+    <span id="ngo-name" style="color:white;font-size:0.85rem;"></span>
+    <button class="btn btn-outline btn-sm" onclick="doLogout()">Logout</button>
+  </div>
+</nav>
+
+<div class="page-header">
+  <h1>NGO Dashboard</h1>
+  <p>Manage your tasks and track volunteer engagement</p>
+</div>
+
+<div class="container">
+
+  <div class="grid-3" style="margin-bottom:1.5rem;">
+    <div class="stat-box"><div class="number" id="stat-total">0</div><div class="label">Total Tasks</div></div>
+    <div class="stat-box"><div class="number" id="stat-open">0</div><div class="label">Open Tasks</div></div>
+    <div class="stat-box"><div class="number" id="stat-needed">0</div><div class="label">Volunteers Still Needed</div></div>
+  </div>
+
+  <div class="grid-2">
+
+    <!-- Create task -->
+    <div class="card">
+      <h2>➕ Post a New Task</h2>
+      <div class="form-group"><label>Task Title *</label>
+        <input type="text" id="t-title" placeholder="e.g. Food Distribution Drive"></div>
+      <div class="form-group"><label>Description *</label>
+        <textarea id="t-desc" rows="3" placeholder="What needs to be done?"></textarea></div>
+      <div class="form-group"><label>Location *</label>
+        <input type="text" id="t-loc" placeholder="e.g. Adajan, Surat, Gujarat"></div>
+      <div class="form-group"><label>Category</label>
+        <select id="t-cat">
+          <option>Food Distribution</option><option>Medical Camp</option>
+          <option>Disaster Relief</option><option>Education</option>
+          <option>Environment</option><option>Animal Welfare</option><option>Other</option>
+        </select></div>
+      <div class="form-group"><label>Volunteers Required</label>
+        <input type="number" id="t-vol" value="5" min="1" max="500"></div>
+      <div class="form-group"><label>Skills Needed <span style="font-weight:400;color:#888;">(comma separated)</span></label>
+        <input type="text" id="t-skills" placeholder="e.g. driving, first-aid, cooking"></div>
+      <div class="form-group"><label>Task Date</label>
+        <input type="date" id="t-date"></div>
+      <button class="btn btn-primary btn-block" onclick="createTask()">📌 Post Task</button>
+      <div id="task-alert" class="alert" style="display:none;"></div>
+    </div>
+
+    <!-- Task list -->
+    <div class="card">
+      <h2>📋 Your Tasks <span id="task-count" style="color:#888;font-weight:400;font-size:0.9rem;"></span></h2>
+      <div class="task-list-wrap">
+        <div id="task-list"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut }
+    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getFirestore, collection, addDoc, query, where,
+           onSnapshot, updateDoc, doc, deleteDoc, getDoc, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  const app  = initializeApp({
+    apiKey:"AIzaSyDaaonECoY2pKtSXLlG1uERanO-vX2TrEE",
+    authDomain:"impactsync-cf74c.firebaseapp.com",
+    projectId:"impactsync-cf74c",
+    storageBucket:"impactsync-cf74c.firebasestorage.app",
+    messagingSenderId:"1017060151982",
+    appId:"1:1017060151982:web:1c14f6cb61fed66059933f"
+  });
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  let currentUser = null;
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) { window.location.href = 'auth.html?role=ngo'; return; }
+    currentUser = user;
+    const snap = await getDoc(doc(db, 'users', user.uid));
+    if (snap.exists()) {
+      document.getElementById('ngo-name').textContent = '👤 ' + snap.data().name;
+    }
+    loadTasks();
+  });
+
+  window.doLogout = async () => {
+    await signOut(auth);
+    window.location.href = 'index.html';
+  };
+
+  window.createTask = async () => {
+    const title  = document.getElementById('t-title').value.trim();
+    const desc   = document.getElementById('t-desc').value.trim();
+    const loc    = document.getElementById('t-loc').value.trim();
+    const cat    = document.getElementById('t-cat').value;
+    const vol    = parseInt(document.getElementById('t-vol').value) || 5;
+    const skills = document.getElementById('t-skills').value
+                    .split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);
+    const date   = document.getElementById('t-date').value;
+    const alertEl = document.getElementById('task-alert');
+    alertEl.style.display = 'none';
+
+    if (!title || !desc || !loc) {
+      alertEl.className = 'alert alert-error';
+      alertEl.textContent = '⚠ Please fill in Title, Description and Location.';
+      alertEl.style.display = 'block';
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, 'tasks'), {
+        title, desc, location: loc, category: cat, volunteers: vol,
+        volunteersAccepted: 0, acceptedBy: [], skills, date,
+        ngoId: currentUser.uid, status: 'open', createdAt: serverTimestamp()
+      });
+      ['t-title','t-desc','t-loc','t-skills','t-date'].forEach(id =>
+        document.getElementById(id).value = '');
+      document.getElementById('t-vol').value = 5;
+      alertEl.className = 'alert alert-success';
+      alertEl.textContent = '✅ Task posted!';
+      alertEl.style.display = 'block';
+      setTimeout(() => alertEl.style.display = 'none', 3000);
+    } catch(err) {
+      alertEl.className = 'alert alert-error';
+      alertEl.textContent = '❌ Error: ' + err.message;
+      alertEl.style.display = 'block';
+    }
+  };
+
+  function loadTasks() {
+    const q = query(collection(db, 'tasks'), where('ngoId','==',currentUser.uid));
+    onSnapshot(q, (snap) => {
+      const tasks = snap.docs.map(d => ({id:d.id,...d.data()}));
+      document.getElementById('stat-total').textContent  = tasks.length;
+      document.getElementById('stat-open').textContent   = tasks.filter(t=>t.status==='open').length;
+      document.getElementById('task-count').textContent  = `(${tasks.length})`;
+      const needed = tasks.reduce((s,t)=>s+Math.max(0,t.volunteers-(t.volunteersAccepted||0)),0);
+      document.getElementById('stat-needed').textContent = needed;
+      renderTasks(tasks);
+    }, (err) => {
+      document.getElementById('task-list').innerHTML =
+        `<div class="empty"><div class="empty-icon">⚠️</div>
+         Could not load tasks.<br><small style="color:#e74c3c;">${err.message}</small></div>`;
+    });
+  }
+
+  // ── URGENCY CHECK ────────────────────────────────────────
+  function isCritical(t) {
+    const needed = t.volunteers || 1;
+    const filled = t.volunteersAccepted || 0;
+    return (filled / needed) < 0.20;
+  }
+
+  function renderTasks(tasks) {
+    const el = document.getElementById('task-list');
+    if (!tasks.length) {
+      el.innerHTML = `<div class="empty"><div class="empty-icon">📋</div>No tasks yet. Create your first task!</div>`;
+      return;
+    }
+
+    // Sort: open first, then closed; within open sort by urgency (most critical first)
+    tasks.sort((a, b) => {
+      if (a.status !== b.status) return a.status === 'open' ? -1 : 1;
+      if (a.status === 'open') {
+        const pctA = (a.volunteersAccepted||0) / (a.volunteers||1);
+        const pctB = (b.volunteersAccepted||0) / (b.volunteers||1);
+        return pctA - pctB; // lower fill % = more urgent = first
+      }
+      return 0;
+    });
+
+    el.innerHTML = tasks.map(t => {
+      const acc      = t.volunteersAccepted || 0;
+      const pct      = Math.min(100, Math.round((acc/t.volunteers)*100));
+      const full     = acc >= t.volunteers;
+      const critical = t.status === 'open' && isCritical(t);
+      const skills   = (t.skills||[]).map(s=>`<span class="tag">${s}</span>`).join('');
+
+      return `
+        <div class="task-card${critical ? ' critical' : ''}" style="${t.status==='closed'?'opacity:0.6;':''}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.3rem;">
+            <h3 style="display:flex;align-items:center;flex-wrap:wrap;gap:0.3rem;">
+              ${t.title}
+              ${critical ? '<span class="critical-label">🔥 Critically Needed</span>' : ''}
+            </h3>
+            <span class="badge ${t.status==='closed'?'badge-red':''}">${t.status}</span>
+          </div>
+          <span class="badge">${t.category}</span>
+          <p style="color:#555;font-size:0.85rem;margin:0.4rem 0;">📍 ${t.location}</p>
+          <p style="font-size:0.83rem;color:#666;">${(t.desc||'').length>80?(t.desc||'').slice(0,80)+'…':t.desc||''}</p>
+          ${skills?`<div style="margin:0.4rem 0;">${skills}</div>`:''}
+          ${t.date?`<p style="font-size:0.8rem;color:#888;">📅 ${t.date}</p>`:''}
+          <p style="font-size:0.83rem;margin-top:0.5rem;">
+            Volunteers: <strong>${acc}/${t.volunteers}</strong> (${pct}% filled)
+            ${full?' <span style="color:#4ecca3;">✓ Full</span>':''}
+            ${critical?' <span style="color:#e74c3c;font-weight:700;">⚠ Needs urgent help!</span>':''}
+          </p>
+          <div class="progress-bar">
+            <div class="fill${critical?' critical-fill':''}" style="width:${pct}%"></div>
+          </div>
+          <div class="task-actions">
+            <button class="btn btn-danger btn-sm" onclick="delTask('${t.id}')">🗑 Delete</button>
+            <button class="btn btn-outline btn-sm" onclick="toggleTask('${t.id}','${t.status}')">
+              ${t.status==='open'?'✓ Mark Done':'↺ Reopen'}
+            </button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  window.delTask = async (id) => {
+    if (!confirm('Delete this task?')) return;
+    await deleteDoc(doc(db,'tasks',id));
+  };
+  window.toggleTask = async (id, status) =>
+    updateDoc(doc(db,'tasks',id), { status: status==='open'?'closed':'open' });
+</script>
+
+</body>
+</html>

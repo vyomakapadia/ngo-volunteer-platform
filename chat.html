@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ImpactSync – AI Assistant</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Add FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    body { 
+      margin: 0; padding: 0; 
+      font-family: 'Inter', sans-serif; 
+      display: flex; height: 100vh; overflow: hidden; 
+      background: #0f172a;
+    }
+
+    .main-content {
+      flex: 1; position: relative; display: flex; align-items: center; justify-content: center;
+    }
+    
+    .bg-img {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;
+    }
+    
+    .bg-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.75); z-index: 2;
+    }
+    
+    .content-text {
+      position: relative; z-index: 3; color: white; padding: 3rem; max-width: 600px; text-align: left;
+    }
+
+    .content-text h1 { font-size: 3.5rem; font-weight: 700; margin-bottom: 1rem; line-height: 1.2; }
+    .content-text p { font-size: 1.2rem; opacity: 0.8; line-height: 1.6; }
+
+    .back-btn {
+      position: absolute; top: 2rem; left: 2rem; width: 45px; height: 45px; border-radius: 50%;
+      background: white; color: #1a1a2e; border: none; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.3s ease; z-index: 1000; font-size: 1.1rem;
+    }
+    .back-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2); color: #009688; }
+
+    /* Side Panel */
+    .side-panel {
+      width: 400px; background: white; position: relative; z-index: 10;
+      box-shadow: -8px 0 32px rgba(0,0,0,0.25); display: flex; flex-direction: column; height: 100vh;
+    }
+
+    /* Deep Purple to Teal Gradient */
+    .chat-header {
+      background: linear-gradient(135deg, #4a148c, #009688);
+      color: white; padding: 1.5rem; border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+    
+    .chat-header h2 { font-size: 1.3rem; margin: 0 0 0.3rem 0; display: flex; align-items: center; font-weight: 600; }
+    .chat-header p { font-size: 0.85rem; opacity: 0.8; margin: 0; }
+
+    .sparkle-icon {
+      animation: sparkle 1.5s infinite alternate ease-in-out;
+      display: inline-block; margin-right: 6px; font-size: 1.4rem;
+    }
+
+    @keyframes sparkle {
+      0% { transform: scale(1) rotate(0deg); opacity: 0.8; }
+      100% { transform: scale(1.3) rotate(20deg); opacity: 1; filter: drop-shadow(0 0 8px rgba(255,255,255,0.8)); }
+    }
+
+    .suggestions { padding: 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem; border-bottom: 1px solid #f1f5f9; background: #fafaf9; }
+    .chip { background: white; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; border: 1px solid #e2e8f0; transition: all 0.2s; color: #475569; font-weight: 500; }
+    .chip:hover { background: #f1f5f9; border-color: #cbd5e1; color: #0f172a; }
+
+    #chat-box { flex: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+
+    .msg { display: flex; flex-direction: column; max-width: 85%; }
+    
+    /* Soft grey for AI, Vibrant Green for User */
+    .msg.bot { align-self: flex-start; }
+    .msg.bot .msg-bubble { background: #f3f4f6; color: #1f2937; border-radius: 18px 18px 18px 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+    
+    .msg.user { align-self: flex-end; }
+    .msg.user .msg-bubble { background: #10b981; color: white; border-radius: 18px 18px 4px 18px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2); }
+    
+    .msg-bubble { padding: 12px 16px; font-size: 0.95rem; line-height: 1.5; }
+    .msg-bubble ul { margin: 0.4rem 0 0 1rem; padding: 0; }
+    .msg-bubble li { margin-bottom: 0.3rem; }
+
+    .chat-input-area { display: flex; padding: 1rem; border-top: 1px solid #e2e8f0; background: white; gap: 10px; align-items: center; }
+    .chat-input-area input { flex: 1; padding: 12px 16px; border-radius: 24px; border: 1px solid #cbd5e1; outline: none; font-size: 0.95rem; transition: border-color 0.2s; background: #f8fafc; }
+    .chat-input-area input:focus { border-color: #009688; background: white; box-shadow: 0 0 0 3px rgba(0, 150, 136, 0.1); }
+    .chat-input-area button { width: 45px; height: 45px; border-radius: 50%; background: linear-gradient(135deg, #4a148c, #009688); color: white; border: none; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
+    .chat-input-area button:hover { transform: scale(1.05); }
+    
+    .typing { font-style: italic; color: #64748b; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+
+<div class="main-content">
+  <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=2000" alt="Background" class="bg-img" />
+  <div class="bg-overlay"></div>
+  <button class="back-btn" onclick="history.back()" aria-label="Go Back">
+    <i class="fas fa-arrow-left"></i>
+  </button>
+  <div class="content-text">
+    <h1>NGO Strategic Assistant</h1>
+    <p>Meet Spark, your AI Co-pilot. Use the side panel to get data-powered insights from your live Firestore tasks.</p>
+  </div>
+</div>
+
+<div class="side-panel">
+  <div class="chat-header">
+    <h2>
+      <span class="sparkle-icon">✨</span> Spark
+      <span style="font-size: 0.65rem; font-weight: 500; margin-left: 8px; opacity: 0.9; background: rgba(0,0,0,0.25); padding: 3px 8px; border-radius: 12px; vertical-align: middle;">Powered by Gemini</span>
+    </h2>
+    <p>Your Data-powered NGO Assistant</p>
+  </div>
+
+  <div class="suggestions">
+    <span class="chip" onclick="ask('Show urgent tasks')">⚠️ Urgent</span>
+    <span class="chip" onclick="ask('Give me a summary')">📋 Summary</span>
+    <span class="chip" onclick="ask('Show required skills')">🛠️ Skills</span>
+    <span class="chip" onclick="ask('Tasks in Surat')">📍 By Location</span>
+  </div>
+
+  <div id="chat-box"></div>
+
+  <div class="chat-input-area">
+    <input type="text" id="user-input" placeholder="Ask about tasks, volunteers, locations…"
+      onkeypress="if(event.key==='Enter') sendMessage()">
+    <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, getDocs }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey:"AIzaSyDaaonECoY2pKtSXLlG1uERanO-vX2TrEE",
+  authDomain:"impactsync-cf74c.firebaseapp.com",
+  projectId:"impactsync-cf74c"
+});
+
+const db = getFirestore(app);
+const chatBox = document.getElementById("chat-box");
+
+function addMessage(text, role) {
+  const div = document.createElement("div");
+  div.className = "msg " + role;
+  div.innerHTML = `<div class="msg-bubble">${text}</div>`;
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function addTyping() {
+  const div = document.createElement("div");
+  div.className = "msg bot";
+  div.id = "typing-indicator";
+  div.innerHTML = `<div class="msg-bubble typing">Analyzing data…</div>`;
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function removeTyping() {
+  const el = document.getElementById("typing-indicator");
+  if (el) el.remove();
+}
+
+async function fetchTasks() {
+  try {
+    const snap = await getDocs(collection(db, "tasks"));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (e) {
+    return [];
+  }
+}
+
+// ✅ FIX 1: reads YOUR Firestore fields: volunteers & volunteersAccepted
+// ✅ UPDATED HELPERS: Matches your Firestore fields
+function getFilled(t) { 
+  // Checks if acceptedBy is an array (counts the IDs) or a direct number
+  if (t.acceptedBy && Array.isArray(t.acceptedBy)) {
+    return t.acceptedBy.length;
+  }
+  return Number(t.volunteersAccepted ?? 0); 
+}
+
+function getNeeded(t) { 
+  // Matches the 'volunteers' field in your Firestore
+  return Number(t.volunteers ?? 1); 
+}
+
+function getPct(t) { 
+  const n = getNeeded(t); 
+  return n > 0 ? getFilled(t) / n : 0; 
+}
+
+function getTitle(t) { return t.title || "Unnamed Task"; }
+function getLocation(t) { return t.location || "Location not set"; }
+
+function formatTask(t) {
+  const filled = getFilled(t), needed = getNeeded(t);
+  const pct = Math.round(getPct(t) * 100);
+  return `<li><strong>${getTitle(t)}</strong> — ${getLocation(t)} (${filled}/${needed} volunteers, ${pct}% filled)</li>`;
+}
+
+function buildResponse(query, tasks) {
+  const q = query.toLowerCase();
+
+  // 1. URGENT LOGIC: Added 'help' and 'shortage'
+  if (q.includes("urgent") || q.includes("shortage") || q.includes("critical") || q.includes("help")) {
+    const urgent = tasks.filter(t => getPct(t) < 0.20);
+    if (urgent.length === 0)
+      return "✅ No tasks are currently under 20% volunteer capacity. All operations appear sufficiently staffed.";
+    const list = urgent.map(formatTask).join("");
+    return `⚠️ <strong>${urgent.length} task(s) have critical volunteer shortages</strong> (under 20% filled):<ul>${list}</ul>Immediate outreach is recommended for these assignments.`;
+  }
+
+  // 2. SUMMARY LOGIC: Added 'volunteer', 'joined', 'progress', and 'stats'
+  if (q.includes("summary") || q.includes("impact") || q.includes("overview") || q.includes("total") || q.includes("volunteer") || q.includes("joined") || q.includes("progress") || q.includes("stats")) {
+    if (tasks.length === 0)
+      return "No task data is currently available in Firestore.";
+    const totalTasks     = tasks.length;
+    const totalNeeded    = tasks.reduce((s,t) => s + getNeeded(t), 0);
+    const totalJoined    = tasks.reduce((s,t) => s + getFilled(t), 0);
+    const totalRemaining = Math.max(0, totalNeeded - totalJoined);
+    const fillRate       = totalNeeded > 0 ? Math.round((totalJoined / totalNeeded) * 100) : 0;
+    return `📋 <strong>ImpactSync Operations Summary</strong><br><br><ul>
+      <li>📌 Total tasks: <strong>${totalTasks}</strong></li>
+      <li>👥 Total volunteers needed: <strong>${totalNeeded}</strong></li>
+      <li>✅ Volunteers joined: <strong>${totalJoined}</strong></li>
+      <li>⏳ Remaining slots: <strong>${totalRemaining}</strong></li>
+      <li>📈 Overall fill rate: <strong>${fillRate}%</strong></li>
+    </ul>`;
+  }
+
+  // 3. SKILLS LOGIC
+  if (q.includes("skill") || q.includes("expertise") || q.includes("requirement")) {
+    const skillCount = {};
+    tasks.forEach(t => {
+      const skills = t.skills ?? t.requiredSkills ?? [];
+      (Array.isArray(skills) ? skills : [skills]).forEach(s => {
+        if (s) skillCount[s] = (skillCount[s] || 0) + 1;
+      });
+    });
+    const sorted = Object.entries(skillCount).sort((a,b) => b[1]-a[1]);
+    if (sorted.length === 0)
+      return "No skill data is recorded in the current task set.";
+    const list = sorted.map(([skill, count]) =>
+      `<li><strong>${skill}</strong> — required in ${count} task(s)</li>`
+    ).join("");
+    return `🛠️ <strong>Most in-demand skills across all tasks:</strong><ul>${list}</ul>Focus recruitment on the top skills to address the highest gaps.`;
+  }
+
+  // 4. LOCATION LOGIC
+  const knownCities = ["surat","mumbai","delhi","ahmedabad","pune","bangalore","hyderabad","chennai","kolkata","jaipur","vadodara","rajkot"];
+  const cityInQuery = knownCities.find(c => q.includes(c));
+  const locationMatch = query.match(/\bin\s+([A-Za-z ]{3,})/i);
+  const locationQuery = cityInQuery || (locationMatch ? locationMatch[1].trim().toLowerCase() : null);
+
+  if (locationQuery) {
+    const filtered = tasks.filter(t => {
+      const loc = getLocation(t).toLowerCase();
+      return loc.includes(locationQuery) ||
+             loc.split(/[,\s]+/).some(p => p.trim() && (p.includes(locationQuery) || locationQuery.includes(p)));
+    });
+    if (filtered.length === 0)
+      return `📍 No tasks found matching location "<strong>${locationQuery}</strong>". Verify the spelling or broaden your search.`;
+    const list = filtered.map(formatTask).join("");
+    return `📍 <strong>${filtered.length} task(s) in ${locationQuery}:</strong><ul>${list}</ul>`;
+  }
+
+  // 5. NEW: SEARCH BY TASK TITLE (The "Secret Demo" feature)
+  const foundTask = tasks.find(t => q.includes(getTitle(t).toLowerCase()));
+  if (foundTask) {
+    return `🔍 I found details for <strong>${getTitle(foundTask)}</strong>:<ul>${formatTask(foundTask)}</ul>`;
+  }
+
+  // DEFAULT FALLBACK
+  return `I can help you with:<ul>
+    <li>⚠️ <em>Urgent tasks</em> — "Show urgent tasks" or "where do we need help?"</li>
+    <li>📋 <em>Impact summary</em> — "Give me a summary" or "how many have joined?"</li>
+    <li>🛠️ <em>Skills needed</em> — "What skills are required?"</li>
+    <li>📍 <em>Location filter</em> — "Tasks in Surat" or "Tasks in Mumbai"</li>
+  </ul>What would you like to know?`;
+}
+
+window.ask = (text) => {
+  document.getElementById("user-input").value = text;
+  sendMessage();
+};
+
+window.sendMessage = async () => {
+  const input = document.getElementById("user-input");
+  const text  = input.value.trim();
+  if (!text) return;
+
+  addMessage(text, "user");
+  input.value = "";
+  addTyping();
+
+  try {
+    const tasks = await fetchTasks();
+    const reply = buildResponse(text, tasks);
+    removeTyping();
+    addMessage(reply, "bot");
+  } catch (e) {
+    removeTyping();
+    addMessage("⚠️ Unable to retrieve task data. Please check your Firestore connection.", "bot");
+  }
+};
+
+addMessage("👋 Hello! I'm your NGO Resource Assistant. I pull live data from Firestore to help you track volunteer capacity, urgent needs, and operational impact.<br><br>Try: <em>\"Show urgent tasks\"</em> or <em>\"Give me a summary\"</em>.", "bot");
+</script>
+
+</body>
+</html>

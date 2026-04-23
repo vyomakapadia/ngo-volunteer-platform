@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ImpactSync – Login</title>
+  <!-- Add FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e, #0f3460, #4ecca3, #1a1a2e);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      color: #fff;
+    }
+    
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .box {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 18px;
+      padding: 3rem 2.5rem 2.5rem;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+
+    .back-btn {
+      position: absolute;
+      top: 1.2rem;
+      left: 1.2rem;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.9);
+      color: #1a1a2e;
+      border: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      z-index: 10;
+    }
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+      color: #4ecca3;
+    }
+
+    .logo { text-align:center; font-size:1.8rem; font-weight:700; margin-bottom:0.2rem; color: #fff; }
+    .logo span { color: #4ecca3; }
+    .role { text-align:center; color:rgba(255, 255, 255, 0.7); font-size:0.82rem; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1.5rem; }
+    
+    .tabs { display:flex; background:rgba(0, 0, 0, 0.2); border-radius:12px; padding:4px; margin-bottom:1.5rem; }
+    .tabs button { flex:1; padding:0.6rem; border:none; border-radius:10px; background:transparent; color:rgba(255, 255, 255, 0.6); font-weight:600; font-size:0.95rem; cursor:pointer; transition: all 0.3s; }
+    .tabs button.active { background:rgba(255, 255, 255, 0.2); color:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.15); }
+    
+    label { display:block; font-weight:500; font-size:0.88rem; margin-bottom:0.4rem; margin-top:1rem; color: rgba(255,255,255,0.9); }
+    
+    input { 
+      width:100%; 
+      padding:0.75rem 1rem; 
+      border:1px solid rgba(255, 255, 255, 0.3); 
+      background: rgba(255, 255, 255, 0.1); 
+      border-radius:12px; 
+      font-size:0.95rem; 
+      color: #fff;
+      transition: all 0.3s;
+    }
+    input::placeholder { color: rgba(255, 255, 255, 0.5); }
+    input:focus { outline:none; border-color:#4ecca3; background: rgba(255, 255, 255, 0.15); box-shadow: 0 0 0 3px rgba(78, 204, 163, 0.2); }
+    
+    .btn { 
+      width:100%; 
+      padding:0.85rem; 
+      background:#4ecca3; 
+      color:#1a1a2e; 
+      border:none; 
+      border-radius:12px; 
+      font-size:1rem; 
+      font-weight:600; 
+      cursor:pointer; 
+      margin-top:1.5rem; 
+      transition: all 0.3s ease;
+    }
+    .btn:hover { 
+      transform: translateY(-2px); 
+      box-shadow: 0 0 15px rgba(78, 204, 163, 0.6); 
+    }
+    .btn:disabled { opacity:0.5; cursor:not-allowed; transform: none; box-shadow: none; }
+    
+    .msg { margin-top:1.2rem; padding:0.75rem 1rem; border-radius:12px; font-size:0.88rem; display:none; line-height:1.5; backdrop-filter: blur(5px); }
+    .msg.error   { background:rgba(253, 232, 232, 0.8); color:#8b1a1a; border:1px solid rgba(245, 176, 176, 0.8); }
+    .msg.success { background:rgba(232, 248, 243, 0.8); color:#0f6e56; border:1px solid rgba(159, 225, 203, 0.8); }
+    
+    .spinner { border:3px solid rgba(255,255,255,0.3); border-top-color:#1a1a2e; border-radius:50%; width:18px; height:18px; animation:spin 0.7s linear infinite; display:inline-block; vertical-align:middle; margin-right:0.4rem; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+  </style>
+</head>
+<body>
+<div class="box">
+  <button class="back-btn" onclick="window.location.href='index.html'" aria-label="Back to Home">
+    <i class="fas fa-arrow-left"></i>
+  </button>
+
+  <div class="logo">Impact<span>Sync</span></div>
+  <div class="role" id="role-label">NGO Portal</div>
+
+  <div class="tabs">
+    <button class="active" id="btn-login"  onclick="showTab('login')">Login</button>
+    <button               id="btn-signup" onclick="showTab('signup')">Sign Up</button>
+  </div>
+
+  <!-- LOGIN -->
+  <div id="tab-login">
+    <label>Email</label>
+    <input type="email" id="l-email" placeholder="you@example.com">
+    <label>Password</label>
+    <input type="password" id="l-pass" placeholder="••••••••"
+      onkeydown="if(event.key==='Enter') doLogin()">
+    <button class="btn" id="login-btn" onclick="doLogin()">Login →</button>
+  </div>
+
+  <!-- SIGNUP -->
+  <div id="tab-signup" style="display:none;">
+    <label>Name / Organisation</label>
+    <input type="text" id="s-name" placeholder="e.g. Helping Hands NGO">
+    <label>Email</label>
+    <input type="email" id="s-email" placeholder="you@example.com">
+    <label>Password (min 6 chars)</label>
+    <input type="password" id="s-pass" placeholder="••••••••"
+      onkeydown="if(event.key==='Enter') doSignup()">
+    <button class="btn" id="signup-btn" onclick="doSignup()">Create Account →</button>
+  </div>
+
+  <div class="msg" id="msg"></div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword }
+    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getFirestore, doc, setDoc }
+    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  // Firebase config — your real keys
+  const app = initializeApp({
+    apiKey:            "AIzaSyDaaonECoY2pKtSXLlG1uERanO-vX2TrEE",
+    authDomain:        "impactsync-cf74c.firebaseapp.com",
+    projectId:         "impactsync-cf74c",
+    storageBucket:     "impactsync-cf74c.firebasestorage.app",
+    messagingSenderId: "1017060151982",
+    appId:             "1:1017060151982:web:1c14f6cb61fed66059933f"
+  });
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  // Role from URL
+  const role = new URLSearchParams(window.location.search).get('role') === 'volunteer'
+    ? 'volunteer' : 'ngo';
+  document.getElementById('role-label').textContent =
+    role === 'ngo' ? 'NGO Portal' : 'Volunteer Portal';
+
+  // Tab switching
+  window.showTab = (tab) => {
+    document.getElementById('tab-login').style.display  = tab === 'login'  ? 'block' : 'none';
+    document.getElementById('tab-signup').style.display = tab === 'signup' ? 'block' : 'none';
+    document.getElementById('btn-login').classList.toggle('active',  tab === 'login');
+    document.getElementById('btn-signup').classList.toggle('active', tab === 'signup');
+    hide();
+  };
+
+  function show(text, type) {
+    const el = document.getElementById('msg');
+    el.textContent = text; el.className = 'msg ' + type; el.style.display = 'block';
+  }
+  function hide() {
+    document.getElementById('msg').style.display = 'none';
+  }
+  function setBusy(id, busy, label) {
+    const b = document.getElementById(id);
+    b.disabled  = busy;
+    b.innerHTML = busy ? '<span class="spinner"></span>Please wait…' : label;
+  }
+
+  // LOGIN
+  window.doLogin = async () => {
+    const email = document.getElementById('l-email').value.trim();
+    const pass  = document.getElementById('l-pass').value;
+    if (!email) { show('Please enter your email.', 'error'); return; }
+    if (!pass)  { show('Please enter your password.', 'error'); return; }
+    setBusy('login-btn', true, 'Login →');
+    hide();
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+      show('✅ Login successful! Redirecting…', 'success');
+      setTimeout(() => {
+        window.location.href = role === 'ngo' ? 'ngo-dashboard.html' : 'volunteer.html';
+      }, 1000);
+    } catch (err) {
+      setBusy('login-btn', false, 'Login →');
+      show(errMsg(err.code), 'error');
+    }
+  };
+
+  // SIGNUP
+  window.doSignup = async () => {
+    const name  = document.getElementById('s-name').value.trim();
+    const email = document.getElementById('s-email').value.trim();
+    const pass  = document.getElementById('s-pass').value;
+    if (!name)           { show('Please enter your name.', 'error'); return; }
+    if (!email)          { show('Please enter your email.', 'error'); return; }
+    if (pass.length < 6) { show('Password must be at least 6 characters.', 'error'); return; }
+    setBusy('signup-btn', true, 'Create Account →');
+    hide();
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, pass);
+      await setDoc(doc(db, 'users', cred.user.uid), {
+        name, email, role, createdAt: new Date().toISOString()
+      });
+      show('✅ Account created! Redirecting…', 'success');
+      setTimeout(() => {
+        window.location.href = role === 'ngo' ? 'ngo-dashboard.html' : 'volunteer.html';
+      }, 1000);
+    } catch (err) {
+      setBusy('signup-btn', false, 'Create Account →');
+      show(errMsg(err.code), 'error');
+    }
+  };
+
+  function errMsg(code) {
+    return {
+      'auth/user-not-found':        'No account with this email. Click Sign Up to register.',
+      'auth/wrong-password':        'Incorrect password. Please try again.',
+      'auth/invalid-credential':    'Wrong email or password. Please try again.',
+      'auth/email-already-in-use':  'Email already registered. Click Login instead.',
+      'auth/invalid-email':         'Please enter a valid email address.',
+      'auth/weak-password':         'Password too weak — use at least 6 characters.',
+      'auth/too-many-requests':     'Too many attempts. Wait a few minutes and try again.',
+      'auth/network-request-failed':'No internet. Check your connection.',
+      'auth/operation-not-allowed': 'Enable Email/Password in Firebase Console → Authentication → Sign-in method.',
+    }[code] || ('Error: ' + code);
+  }
+</script>
+</body>
+</html>

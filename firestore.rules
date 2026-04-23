@@ -1,0 +1,36 @@
+rules_version = '2';
+// ─────────────────────────────────────────────────────────────────────────────
+// ImpactSync – Firestore Security Rules
+// FIX: Previous rules required request.auth which caused
+//      "Missing or insufficient permissions" for volunteers accepting tasks
+//      and NGOs creating tasks during the hackathon demo.
+//
+// HOW TO APPLY:
+//   1. Go to https://console.firebase.google.com
+//   2. Open your project → Firestore Database → Rules tab
+//   3. Replace everything with the rules below → click Publish
+// ─────────────────────────────────────────────────────────────────────────────
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Users collection ─────────────────────────────────
+    // Any authenticated user can read profiles (needed for volunteer matching).
+    // Users can only write their own profile.
+    match /users/{userId} {
+      allow read:  if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // ── Tasks collection ─────────────────────────────────
+    // FIX: Changed to allow any authenticated user to read and create tasks.
+    // Only the NGO that owns a task can delete it.
+    // Any authenticated user can update (needed for volunteers to accept tasks
+    // and increment volunteersAccepted / add to acceptedBy array).
+    match /tasks/{taskId} {
+      allow read:   if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
+      allow delete: if request.auth != null && resource.data.ngoId == request.auth.uid;
+    }
+  }
+}

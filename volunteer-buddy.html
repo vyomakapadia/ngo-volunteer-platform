@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ImpactSync – Volunteer Buddy</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Add FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    body { 
+      margin: 0; padding: 0; 
+      font-family: 'Inter', sans-serif; 
+      display: flex; height: 100vh; overflow: hidden; 
+      background: #0f172a;
+    }
+
+    .main-content {
+      flex: 1; position: relative; display: flex; align-items: center; justify-content: center;
+    }
+    
+    .bg-img {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;
+    }
+    
+    .bg-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.75); z-index: 2;
+    }
+    
+    .content-text {
+      position: relative; z-index: 3; color: white; padding: 3rem; max-width: 600px; text-align: left;
+    }
+
+    .content-text h1 { font-size: 3.5rem; font-weight: 700; margin-bottom: 1rem; line-height: 1.2; }
+    .content-text p { font-size: 1.2rem; opacity: 0.8; line-height: 1.6; }
+
+    .back-btn {
+      position: absolute; top: 2rem; left: 2rem; width: 45px; height: 45px; border-radius: 50%;
+      background: white; color: #1a1a2e; border: none; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.3s ease; z-index: 1000; font-size: 1.1rem;
+    }
+    .back-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2); color: #009688; }
+
+    /* Side Panel */
+    .side-panel {
+      width: 400px; background: white; position: relative; z-index: 10;
+      box-shadow: -8px 0 32px rgba(0,0,0,0.25); display: flex; flex-direction: column; height: 100vh;
+    }
+
+    /* Deep Purple to Teal Gradient */
+    .chat-header {
+      background: linear-gradient(135deg, #4a148c, #009688);
+      color: white; padding: 1.5rem; border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+    
+    .chat-header h2 { font-size: 1.3rem; margin: 0 0 0.3rem 0; display: flex; align-items: center; font-weight: 600; }
+    .chat-header p { font-size: 0.85rem; opacity: 0.8; margin: 0; }
+
+    .sparkle-icon {
+      animation: sparkle 1.5s infinite alternate ease-in-out;
+      display: inline-block; margin-right: 6px; font-size: 1.4rem;
+    }
+
+    @keyframes sparkle {
+      0% { transform: scale(1) rotate(0deg); opacity: 0.8; }
+      100% { transform: scale(1.3) rotate(20deg); opacity: 1; filter: drop-shadow(0 0 8px rgba(255,255,255,0.8)); }
+    }
+
+    .suggestions { padding: 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem; border-bottom: 1px solid #f1f5f9; background: #fafaf9; }
+    .chip { background: white; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; border: 1px solid #e2e8f0; transition: all 0.2s; color: #475569; font-weight: 500; }
+    .chip:hover { background: #f1f5f9; border-color: #cbd5e1; color: #0f172a; }
+
+    #chat-box { flex: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+
+    .msg { display: flex; flex-direction: column; max-width: 85%; }
+    
+    /* Soft grey for AI, Vibrant Green for User */
+    .msg.bot { align-self: flex-start; }
+    .msg.bot .msg-bubble { background: #f3f4f6; color: #1f2937; border-radius: 18px 18px 18px 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+    
+    .msg.user { align-self: flex-end; }
+    .msg.user .msg-bubble { background: #10b981; color: white; border-radius: 18px 18px 4px 18px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2); }
+    
+    .msg-bubble { padding: 12px 16px; font-size: 0.95rem; line-height: 1.5; }
+    .msg-bubble ul { margin: 0.4rem 0 0 1rem; padding: 0; }
+    .msg-bubble li { margin-bottom: 0.3rem; }
+
+    .chat-input-area { display: flex; padding: 1rem; border-top: 1px solid #e2e8f0; background: white; gap: 10px; align-items: center; }
+    .chat-input-area input { flex: 1; padding: 12px 16px; border-radius: 24px; border: 1px solid #cbd5e1; outline: none; font-size: 0.95rem; transition: border-color 0.2s; background: #f8fafc; }
+    .chat-input-area input:focus { border-color: #009688; background: white; box-shadow: 0 0 0 3px rgba(0, 150, 136, 0.1); }
+    .chat-input-area button { width: 45px; height: 45px; border-radius: 50%; background: linear-gradient(135deg, #4a148c, #009688); color: white; border: none; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
+    .chat-input-area button:hover { transform: scale(1.05); }
+    
+    .typing { font-style: italic; color: #64748b; font-size: 0.85rem; }
+  </style>
+</head>
+
+<body>
+
+<div class="main-content">
+  <img src="https://images.unsplash.com/photo-1593113565214-0c46b5a34ec8?auto=format&fit=crop&q=80&w=2000" alt="Background" class="bg-img" />
+  <div class="bg-overlay"></div>
+  <button class="back-btn" onclick="history.back()" aria-label="Go Back">
+    <i class="fas fa-arrow-left"></i>
+  </button>
+  <div class="content-text">
+    <h1>Make an Impact</h1>
+    <p>Meet Spark, your AI Volunteer Buddy. Use the side panel to find the perfect volunteer opportunities matched to your skills and location.</p>
+  </div>
+</div>
+
+<div class="side-panel">
+  <div class="chat-header">
+    <h2>
+      <span class="sparkle-icon">✨</span> Spark
+      <span style="font-size: 0.65rem; font-weight: 500; margin-left: 8px; opacity: 0.9; background: rgba(0,0,0,0.25); padding: 3px 8px; border-radius: 12px; vertical-align: middle;">Powered by Gemini</span>
+    </h2>
+    <p>Your AI Volunteer Buddy</p>
+  </div>
+
+  <div class="suggestions">
+    <span class="chip" onclick="ask('Find tasks near me')">📍 Near me</span>
+    <span class="chip" onclick="ask('Most urgent tasks')">🔥 Urgent</span>
+    <span class="chip" onclick="ask('Tasks this weekend')">📅 Weekend</span>
+    <span class="chip" onclick="ask('What skills are needed?')">🛠️ Skills</span>
+  </div>
+
+  <div id="chat-box"></div>
+
+  <div class="chat-input-area">
+    <input id="user-input" placeholder="Ask me anything…"
+      onkeypress="if(event.key==='Enter') sendMessage()">
+    <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, getDocs, doc, getDoc }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const app = initializeApp({
+  apiKey:"AIzaSyDaaonECoY2pKtSXLlG1uERanO-vX2TrEE",
+  authDomain:"impactsync-cf74c.firebaseapp.com",
+  projectId:"impactsync-cf74c"
+});
+const db   = getFirestore(app);
+const auth = getAuth(app);
+
+const chatBox = document.getElementById("chat-box");
+
+// ── Volunteer profile (loaded on auth) ───────────────────────────────────────
+let myProfile = { location: null, skills: [] };
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    try {
+      const snap = await getDoc(doc(db, "volunteers", user.uid));
+      if (snap.exists()) {
+        const data = snap.data();
+        myProfile.location = (data.location || data.city || "").toLowerCase();
+        myProfile.skills   = Array.isArray(data.skills) ? data.skills.map(s => s.toLowerCase()) : [];
+      }
+    } catch (_) {}
+  }
+});
+
+// ── UI helpers ───────────────────────────────────────────────────────────────
+
+function addMessage(text, role) {
+  const div = document.createElement("div");
+  div.className = "msg " + role;
+  div.innerHTML = `<div class="msg-bubble">${text}</div>`;
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function addTyping() {
+  const div = document.createElement("div");
+  div.className = "msg bot";
+  div.id = "typing-indicator";
+  div.innerHTML = `<div class="msg-bubble typing">Looking for the best tasks for you… 🔍</div>`;
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function removeTyping() {
+  const el = document.getElementById("typing-indicator");
+  if (el) el.remove();
+}
+
+// -- Firestore --
+async function fetchTasks() {
+  try {
+    const snap = await getDocs(collection(db, "tasks"));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (_) { return []; }
+}
+
+// -- Helpers --
+function getFilled(t) { 
+  if (t.acceptedBy && Array.isArray(t.acceptedBy)) return t.acceptedBy.length;
+  return Number(t.volunteersAccepted ?? 0); 
+}
+
+function getNeeded(t) { return Number(t.volunteers ?? 1); }
+
+function getPct(t) { 
+  const n = getNeeded(t); 
+  return n > 0 ? getFilled(t) / n : 0; 
+}
+
+function getTitle(t) { return t.title || "Unnamed Task"; }
+function getLocation(t) { return t.location || "Location not set"; }
+
+function getSkills(t) {
+  const s = t.skills ?? t.requiredSkills ?? [];
+  return Array.isArray(s) ? s : [s];
+}
+
+function formatTask(t) {
+  const filled = getFilled(t), needed = getNeeded(t);
+  const pct = Math.round(getPct(t) * 100);
+  const skills = getSkills(t).join(", ") || "—";
+  return `<li>🌟 <strong>${getTitle(t)}</strong><br>📍 ${getLocation(t)} | 👥 ${filled}/${needed} slots (${pct}% filled) | 🛠️ ${skills}</li>`;
+}
+
+// -- Improved Date Logic --
+function taskMatchesWeekend(t) {
+  const dateStr = t.date || t.eventDate || "";
+  if (!dateStr) return false;
+  const taskDate = new Date(dateStr);
+  const day = taskDate.getDay(); 
+  return day === 0 || day === 6; // Sun or Sat
+}
+
+// -- Smarter Logic Engine --
+function buildResponse(query, tasks) {
+  const q = query.toLowerCase();
+
+  if (q.includes("near me") || q.includes("nearby") || q.includes("local")) {
+    if (!myProfile.location) return "📍 I don't see your location in your profile. Try asking for a specific city!";
+    const nearby = tasks.filter(t => getLocation(t).toLowerCase().includes(myProfile.location));
+    if (nearby.length === 0) return `😢 No tasks found near ${myProfile.location} right now.`;
+    return `📍 Found <strong>${nearby.length} task(s)</strong> near you:<ul>${nearby.map(formatTask).join("")}</ul>`;
+  }
+
+  if (q.includes("urgent") || q.includes("help") || q.includes("shortage")) {
+    const urgent = tasks.filter(t => getPct(t) < 0.20);
+    if (urgent.length === 0) return "✅ No critical shortages right now!";
+    return `🔥 <strong>${urgent.length} tasks need help immediately:</strong><ul>${urgent.map(formatTask).join("")}</ul>`;
+  }
+
+  if (q.includes("weekend") || q.includes("saturday") || q.includes("sunday")) {
+    const weekendTasks = tasks.filter(taskMatchesWeekend); 
+    if (weekendTasks.length === 0) return "📅 No tasks scheduled for this weekend yet.";
+    return `📅 <strong>Weekend Opportunities:</strong><ul>${weekendTasks.map(formatTask).join("")}</ul>`;
+  }
+
+  if (q.includes("skill") || q.includes("needed") || q.includes("required")) {
+    const skillCount = {};
+    tasks.forEach(t => getSkills(t).forEach(s => { if(s) skillCount[s] = (skillCount[s]||0)+1; }));
+    const sorted = Object.entries(skillCount).sort((a,b) => b[1]-a[1]).slice(0, 5);
+    const list = sorted.map(([s,c]) => `<li>🔹 <strong>${s}</strong> (needed in ${c} tasks)</li>`).join("");
+    return `🛠️ <strong>Top skills needed:</strong><ul>${list}</ul>`;
+  }
+
+  const keywords = q.split(" ").filter(w => w.length > 3);
+  const searchResults = tasks.filter(t => {
+    const content = (getTitle(t) + " " + (t.desc || "") + " " + getSkills(t).join(" ")).toLowerCase();
+    return keywords.some(k => content.includes(k));
+  });
+
+  if (searchResults.length > 0 && keywords.length > 0) {
+    return `🔍 I found <strong>${searchResults.length} task(s)</strong>:<ul>${searchResults.map(formatTask).join("")}</ul>`;
+  }
+
+  return `I'm Spark! ✨ I can find tasks based on your **location**, **skills**, or **urgency**. Try: *"Tasks in Surat"*`;
+}
+
+// ── Main handler ──────────────────────────────────────────────────────────────
+
+window.ask = (text) => {
+  document.getElementById("user-input").value = text;
+  sendMessage();
+};
+
+window.sendMessage = async () => {
+  const input = document.getElementById("user-input");
+  const text  = input.value.trim();
+  if (!text) return;
+
+  addMessage(text, "user");
+  input.value = "";
+  addTyping();
+
+  try {
+    const tasks = await fetchTasks();
+    const reply = buildResponse(text, tasks);
+    removeTyping();
+    addMessage(reply, "bot");
+  } catch (e) {
+    removeTyping();
+    addMessage("⚠️ Couldn't load tasks right now. Please check your connection and try again!", "bot");
+  }
+};
+
+// Welcome message
+addMessage("Hey there! 👋 I'm <strong>Spark</strong>, your personal volunteer buddy! 🌟<br><br>I'll match you with tasks based on your location, skills, and schedule — all powered by live Firestore data.<br><br>Try asking: <em>\"Find tasks near me\"</em> or <em>\"Most urgent tasks\"</em> 🚀", "bot");
+</script>
+
+</body>
+</html>

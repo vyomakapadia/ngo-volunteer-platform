@@ -1,0 +1,52 @@
+[
+  {
+    "_note": "Document 1 — Urgent (only 10% filled)",
+    "title": "Food Distribution Drive",
+    "category": "Food Relief",
+    "location": "Surat",
+    "volunteersFilled": 2,
+    "volunteersNeeded": 20,
+    "skills": ["Driving", "Packing", "Communication"],
+    "status": "open"
+  },
+  {
+    "_note": "Document 2 — Urgent (only 6% filled)",
+    "title": "Free Medical Camp",
+    "category": "Healthcare",
+    "location": "Surat",
+    "volunteersFilled": 1,
+    "volunteersNeeded": 15,
+    "skills": ["First Aid", "Medical Knowledge", "Coordination"],
+    "status": "open"
+  },
+  {
+    "_note": "Document 3 — Mostly filled (80%)",
+    "title": "Student Tutoring Program",
+    "category": "Education",
+    "location": "Surat",
+    "volunteersFilled": 8,
+    "volunteersNeeded": 10,
+    "skills": ["Teaching", "Maths", "English"],
+    "status": "open"
+  },
+  {
+    "_note": "Document 4 — Mumbai task (48% filled)",
+    "title": "Tree Plantation Drive",
+    "category": "Environment",
+    "location": "Mumbai",
+    "volunteersFilled": 12,
+    "volunteersNeeded": 25,
+    "skills": ["Physical Fitness", "Teamwork"],
+    "status": "open"
+  },
+  {
+    "_note": "Document 5 — Ahmedabad task (62% filled)",
+    "title": "Winter Clothes Collection",
+    "category": "Relief",
+    "location": "Ahmedabad",
+    "volunteersFilled": 5,
+    "volunteersNeeded": 8,
+    "skills": ["Sorting", "Driving", "Communication"],
+    "status": "open"
+  }
+]
